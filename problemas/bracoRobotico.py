@@ -19,7 +19,6 @@ class bracoRobotico(Problema):
             [" ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " "],
             [" ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " "]
         ])
-
         self.estado_inicial[3][3] = c1.peso
         self.estado_inicial[3][5] = c2.peso
         self.estado_inicial[3][7] = c3.peso
@@ -28,6 +27,18 @@ class bracoRobotico(Problema):
     def iniciar(self):
         self.no_raiz = No(self.estado_inicial)
         return self.no_raiz
+
+    def testar_objetivo(self, no):
+        estado = no.estado
+        for coluna in range(11):  # Itera sobre as colunas onde as caixas são empilhadas
+            pilha = []  # Lista para armazenar os pesos das caixas na coluna atual
+            for linha in range(4):  # Itera sobre as linhas na coluna atual
+                if estado[linha][coluna] != " ":  # Se houver uma caixa nesta posição
+                    peso_caixa = estado[linha][coluna]  # Pega o peso da caixa
+                    if pilha and peso_caixa > pilha[-1]:  # Verifica se a caixa é mais leve que a anterior
+                        return False  # Se não estiver empilhado corretamente, retorna False
+                    pilha.append(peso_caixa)  # Adiciona o peso da caixa na pilha
+        return True  # Se todas as pilhas estiverem corretamente organizadas, retorna True
 
     def imprimir(self, no):
         estado = no.estado
