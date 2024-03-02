@@ -5,61 +5,47 @@ from problemas.problema import Problema
 from problemas.caixas import caixas
 
 
-class bracoRobotico(Problema):
-    def __init__(self):
+class bracoRobotico:
+    def __init__(self, boxes=4, max_positions=9):
+        self.max_boxes_stacked = 3
 
-        c1 = caixas(10)
-        c2 = caixas(30)
-        c3 = caixas(10)
-        c4 = caixas(40)
+        # Definindo as posições iniciais das caixas
+        box_position = [1, 4, 6, 8]
 
-        self.estado_inicial = np.array([
-            [" ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " "],
-            [" ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " "],
-            [" ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " "],
-            [" ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " "]
+        # Convertendo para arrays numpy
+        self.positions = np.array(box_position)
+        self.boxes = np.array(boxes)
+
+        # Concatenando as posições das caixas com a nova caixa
+        self.estado_inicial = np.concatenate([
+            self.positions,
+            np.array([max_positions // 3, -1])  # Nova caixa na metade do tabuleiro com altura -1
         ])
-        self.estado_inicial[3][3] = c1.peso
-        self.estado_inicial[3][5] = c2.peso
-        self.estado_inicial[3][7] = c3.peso
-        self.estado_inicial[3][0] = c4.peso
 
     def iniciar(self):
         self.no_raiz = No(self.estado_inicial)
+        while self.testeMaior():
+            self.estado_inicial = np.concatenate([])
+            break
         return self.no_raiz
 
-    def testar_objetivo(self, no):
-        estado = no.estado
-        for coluna in range(11):  # Itera sobre as colunas onde as caixas são empilhadas
-            pilha = []  # Lista para armazenar os pesos das caixas na coluna atual
-            for linha in range(4):  # Itera sobre as linhas na coluna atual
-                if estado[linha][coluna] != " ":  # Se houver uma caixa nesta posição
-                    peso_caixa = estado[linha][coluna]  # Pega o peso da caixa
-                    if pilha and peso_caixa > pilha[-1]:  # Verifica se a caixa é mais leve que a anterior
-                        return False  # Se não estiver empilhado corretamente, retorna False
-                    pilha.append(peso_caixa)  # Adiciona o peso da caixa na pilha
-        return True  # Se todas as pilhas estiverem corretamente organizadas, retorna True
+    def testeMaior(self):
+        # Verifica se o número máximo de caixas empilhadas é diferente de 3
+        if self.max_boxes_stacked != 3:
+            return True
+        else:
+            return False
+
 
     def imprimir(self, no):
         estado = no.estado
         return ''.join([f"\r{' '.join(estado[i:i + 8])}\n" for i in range(0, 64, 8)])
+        #ainda não faco ideia
 
-        print(labirinto)
 
     def gerar_sucessores(self, no):
-        estado = no.estado
         nos_sucessores = []
-
-        # encontra a posição do _
-        posicao = np.where(estado == "I")[0][0]
-
-        expansoes = [self._direita, self._esquerda, self._cima, self._baixo]
-        random.shuffle(expansoes)
-        for expansao in expansoes:
-            no_sucessor = expansao(posicao, no)
-            # self.custo(no, no_sucessor)
-            if no_sucessor is not None: nos_sucessores.append(no_sucessor)
-
+        estado = no.estado
         return nos_sucessores
 
     def custo(self, estado_atual, estado_sucessor):
