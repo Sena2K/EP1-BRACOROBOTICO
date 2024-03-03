@@ -52,3 +52,4 @@ class FilaPrioridade:
 
     def esta_vazio(self):
         return self.fila.empty()
+
