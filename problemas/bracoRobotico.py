@@ -43,7 +43,6 @@ def generate_initial_state(self, num_boxes, tamanho_espacos):
         stack = []
         # Adicionamos o número correto de caixas à pilha
         for _ in range(3):  # Limite de 3 caixas por pilha
-            # Aqui você pode criar uma caixa com um peso aleatório ou com um peso específico, conforme necessário
             box = Box(weight=random.randint(1, 80))  # Exemplo: peso aleatório de 1 a 80
             stack.append(box)
         # Adicionamos a pilha ao estado inicial
@@ -81,6 +80,75 @@ def generate_successors(self, node):
     return successors
 
 
+def move_left(self):
+    # Verifica se é possível mover para a esquerda
+    if self.can_move_left():
+        # Atualiza o estado do sistema para refletir o movimento para a esquerda
+        # Por exemplo, você pode diminuir a posição do braço em uma unidade
+        self.current_position -= 1
+        print("Braço movido para a esquerda.")
+    else:
+        print("Não é possível mover para a esquerda.")
+
+
+def can_move_left(self):
+    # Verifica se o braço pode se mover para a esquerda
+    # Por exemplo, você pode verificar se a posição atual não é a mais à esquerda
+    return self.current_position > 0
+
+
+def move_right(self):
+    # Verifica se é possível mover para a direita
+    if self.can_move_right():
+        # Atualiza o estado do sistema para refletir o movimento para a direita
+        # Por exemplo, você pode aumentar a posição do braço em uma unidade
+        self.current_position += 1
+        print("Braço movido para a direita.")
+    else:
+        print("Não é possível mover para a direita.")
+
+
+def can_move_right(self):
+    # Verifica se o braço pode se mover para a direita
+    # Por exemplo, você pode verificar se a posição atual não é a mais à direita
+    return self.current_position < self.max_position
+
+
+def stretch_one_step(self):
+    # Verifica se é possível esticar um passo para a frente
+    if self.can_stretch_one_step():
+        # Atualiza o estado do sistema para refletir o movimento para frente
+        # Por exemplo, você pode aumentar a posição do braço em uma unidade
+        self.current_position += 1
+        print("Braço esticado um passo para a frente.")
+    else:
+        print("Não é possível esticar um passo para a frente.")
+
+
+def can_stretch_one_step(self):
+    # Verifica se o braço pode esticar um passo para a frente
+    # Por exemplo, você pode verificar se a posição atual não é a mais avançada
+    return self.current_position < self.max_position
+
+
+class bracoRobotico:
+    # Outros métodos da classe bracoRobotico...
+
+    def stretch_four_steps(self):
+        # Verifica se é possível esticar quatro passos para trás
+        if self.can_stretch_four_steps():
+            # Atualiza o estado do sistema para refletir o movimento para trás
+            # Por exemplo, você pode diminuir a posição do braço em quatro unidades
+            self.current_position -= 4
+            print("Braço esticado quatro passos para trás.")
+        else:
+            print("Não é possível esticar quatro passos para trás.")
+
+    def can_stretch_four_steps(self):
+        # Verifica se o braço pode esticar quatro passos para trás
+        return self.current_position >= 4  # Supondo que você não pode ir além da posição inicial
+
+
 def greedy_search(self):
     # Implementação do algoritmo Greedy Search
     current_state = self.initial_state
@@ -106,7 +174,8 @@ def print_progress(self, current_state):
     print("Estado atual:")
     print(' '.join(current_state))
 
+
 resultado_dijkstra = dijkstra(bracoRobotico)
 print("Resultado do Dijkstra:", resultado_dijkstra)
 fila = FilaPrioridade()
-fila.push(0, no)
+fila.push(0, No)
