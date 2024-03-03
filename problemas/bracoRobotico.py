@@ -11,10 +11,6 @@ class Box:
     def __init__(self, weight):
         self.weight = weight
 
-        def stack_Boxes(self):
-            # Ordenar as caixas de cada pilha por peso
-            for stack in self.initial_state:
-                stack.sort(key=lambda box: box.weight, reverse=True)
 
 class bracoRobotico:
     def __init__(self, num_caixas, space_size):
@@ -28,7 +24,8 @@ def is_goal_state(self, state):
             return False
     # Verifica se as caixas estão ordenadas por peso em cada pilha
     for stack in state.stacks:
-        previous_weight = float('-inf')
+        previous_weight = float(
+            '-inf')  # Inicializa a variável previous_weight com o valor negativo infinito para garantir, que na primeira iteração qualquer peso de caixa será considerado maior que previous_weigh
         for box in stack:
             if box.weight < previous_weight:
                 return False
@@ -41,7 +38,7 @@ def generate_initial_state(self, num_boxes, tamanho_espacos):
     initial_state = []
 
     # Iteramos sobre o número de pilhas desejadas
-    for _ in range(num_boxes):
+    for _ in range(num_boxes):  # variavel n sera usada por isso o _
         # Para cada pilha, criamos uma lista vazia para representar as caixas
         stack = []
         # Adicionamos o número correto de caixas à pilha
@@ -134,23 +131,20 @@ def can_stretch_one_step(self):
     return self.current_position < self.max_position
 
 
-class bracoRobotico:
-    # Outros métodos da classe bracoRobotico...
+def stretch_four_steps(self):
+    # Verifica se é possível esticar quatro passos para trás
+    if self.can_stretch_four_steps():
+        # Atualiza o estado do sistema para refletir o movimento para trás
+        # Por exemplo, você pode diminuir a posição do braço em quatro unidades
+        self.current_position -= 4
+        print("Braço esticado quatro passos para trás.")
+    else:
+        print("Não é possível esticar quatro passos para trás.")
 
-    def stretch_four_steps(self):
-        # Verifica se é possível esticar quatro passos para trás
-        if self.can_stretch_four_steps():
-            # Atualiza o estado do sistema para refletir o movimento para trás
-            # Por exemplo, você pode diminuir a posição do braço em quatro unidades
-            self.current_position -= 4
-            print("Braço esticado quatro passos para trás.")
-        else:
-            print("Não é possível esticar quatro passos para trás.")
 
-    def can_stretch_four_steps(self):
-        # Verifica se o braço pode esticar quatro passos para trás
-        return self.current_position >= 4  # Supondo que você não pode ir além da posição inicial
-
+def can_stretch_four_steps(self):
+    # Verifica se o braço pode esticar quatro passos para trás
+    return self.current_position >= 4  # Supondo que você não pode ir além da posição inicial
 
 def greedy_search(self):
     # Implementação do algoritmo Greedy Search
