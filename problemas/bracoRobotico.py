@@ -5,13 +5,16 @@ import no
 from algoritmos.dijkstra import dijkstra, FilaPrioridade
 from no import No
 from problemas.problema import Problema
-from problemas.caixas import caixas
 
 
 class Box:
     def __init__(self, weight):
         self.weight = weight
 
+        def stack_Boxes(self):
+            # Ordenar as caixas de cada pilha por peso
+            for stack in self.initial_state:
+                stack.sort(key=lambda box: box.weight, reverse=True)
 
 class bracoRobotico:
     def __init__(self, num_caixas, space_size):
@@ -66,13 +69,13 @@ def generate_successors(self, node):
 
         # Aplica a ação ao estado atual e obtém o novo estado
         if action == "move_left":
-            new_state.move_left()  # Suponha que você tenha um método definido para mover o braço para a esquerda
+            new_state.move_left()
         elif action == "move_right":
-            new_state.move_right()  # Suponha que você tenha um método definido para mover o braço para a direita
+            new_state.move_right()
         elif action == "stretch_one_step":
-            new_state.stretch_one_step()  # Suponha que você tenha um método definido para mover o braço para a frente
+            new_state.stretch_one_step()
         elif action == "stretch_four_steps":
-            new_state.stretch_four_steps()  # Suponha que você tenha um método definido para esticar o braço quatro casas para trás
+            new_state.stretch_four_steps()
 
         # Adiciona o novo estado à lista de sucessores
         successors.append(new_state)

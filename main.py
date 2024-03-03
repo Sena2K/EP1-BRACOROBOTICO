@@ -1,3 +1,4 @@
+from auxiliar.Visitados import vertice_caminho
 from problemas.problema import Problema
 from algoritmos.a_estrela import a_estrela
 from problemas.bracoRobotico import bracoRobotico
