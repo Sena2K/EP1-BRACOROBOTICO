@@ -6,24 +6,53 @@ from problemas.problema import Problema
 
 class Braco(Problema):
     def __init__(self):
-
-        self.estado_objetivo = np.array(["30", "20", "10", "R",
-                                         ".", ".", ".", "|",
-                                         ".", ".", ".", "|",
-                                         "30", ".", ".", "|",
-                                         ".", ".", ".", "|",
-                                         ".", ".", ".", "|",
+        self.estado_objetivo = np.array(["30", "20", "10", "R", ".", ".", ".", "|",
+                                         ".", ".", ".", "|", ".", ".", ".", "|",
+                                         ".", ".", ".", "|", ".", ".", ".", "|",
+                                         "60", "30", "20", "5", "R", ".", ".", "|",
+                                         ".", ".", ".", "|", ".", ".", ".", "|",
+                                         ".", ".", ".", "|", ".", ".", ".", "|",
                                          "."])
-        self.estado_inicial = np.array([".", ".", ".", "|",
-                                        "30", ".", ".", "|",
-                                        "20", ".", ".", "|",
-                                        "10", ".", ".", "R",
-                                        "30", ".", ".", "|",
-                                        ".", ".", ".", "|",
+        self.estado_inicial = np.array([".", ".", ".", "R", ".", ".", ".", "|",
+                                        "30", "10", ".", "|", "5", ".", ".", "|",
+                                        "20", "20", ".", "|", ".", ".", ".", "|",
+                                        "10", "60", ".", "R", ".", ".", ".", "|",
+                                        ".", ".", ".", "|", ".", ".", ".", "|",
+                                        ".", ".", ".", "|", ".", ".", ".", "|",
                                         "."])
 
+        # Método para inicializar o estado final com as caixas empilhadas corretamente
+        self.estado_final = self.inicializar_estado_final()
+
+
+    def inicializar_estado_final(self):
+        estado_final = np.full((6, 8), ".", dtype=str)  # Inicializa o estado final com pontos
+
+        # Cada coluna é uma lista que será preenchida com as caixas
+        colunas = [[] for _ in range(8)]
+
+        # Preenche as caixas nas colunas de acordo com o estado objetivo
+        index = 0
+        for coluna in range(8):
+            for linha in range(6):
+                if self.estado_objetivo[index] != ".":
+                    colunas[coluna].append(self.estado_objetivo[index])
+                index += 1
+
+        # Verifica se alguma pilha tem mais de 4 caixas
+        for pilha in colunas:
+            if len(pilha) > 4:
+                raise ValueError("Erro: Uma pilha não pode ter mais de 4 caixas.")
+
+        # Empilha as caixas em cada coluna no estado final
+        for coluna, pilha in enumerate(colunas):
+            for linha, caixa in enumerate(pilha):
+                estado_final[linha][coluna] = caixa
+
+        return estado_final
+
     def iniciar(self):
-        self.no_raiz = No(self.estado_inicial)
+        self.no_raiz = No(self.estado_objetivo)
         return self.no_raiz
 
     # Função auxiliar para imprimir
@@ -32,21 +61,20 @@ class Braco(Problema):
         maquina = ""
 
         for i in range(6):
-            for j in range(4):
-                index = i * 4 + j
+            for j in range(8):
+                index = i * 8 + j
                 maquina += estado[index] + " "
             maquina += "\n"
 
         maquina += estado[-1]
         return maquina
 
-
     def testar_objetivo(self, no):
         return np.array_equal(no.estado, self.estado_objetivo)
 
     def calcular_custo_energia(self, acao, posicao, no):
         custo = 0
-        if acao == "⬅️" or acao == "➡️":
+        if acao in ["⬅️", "➡️"]:
             distancia = abs(posicao - np.where(no.estado == "R")[0][0])  # Calcula a distância percorrida
             if distancia == 1:
                 custo += 1  # Movimento de uma casa custa 1 de energia
@@ -65,43 +93,38 @@ class Braco(Problema):
         estado = no.estado
         nos_sucessores = []
 
-        # encontra a posição do R (Braco)
+        # Encontra a posição do R (Braço)
         posicao = np.where(estado == "R")[0][0]
 
         expansoes = [self._direita, self._esquerda, self._agarrar, self._soltar]
         random.shuffle(expansoes)
         for expansao in expansoes:
             no_sucessor = expansao(posicao, no)
-            if no_sucessor is not None: nos_sucessores.append(no_sucessor)
+            if no_sucessor is not None:
+                nos_sucessores.append(no_sucessor)
 
         return nos_sucessores
 
-
     def _esquerda(self, posicao, no):
-        # movimento para esquerda fazendo swap apenas na ultima coluna
-        if posicao not in [0, 1, 2] and no.estado[posicao - 4] == "|":
-
+        # Movimento para esquerda fazendo swap apenas na última coluna
+        if posicao % 4 != 0 and no.estado[posicao - 1] == "|":
             sucessor = np.copy(no.estado)
-            sucessor[posicao] = sucessor[posicao - 4]
-            sucessor[posicao - 4] = "R"
+            sucessor[posicao] = sucessor[posicao - 1]
+            sucessor[posicao - 1] = "R"
             return No(sucessor, no, "⬅️")
         else:
-            None
+            return None
 
     def _direita(self, posicao, no):
-        # movimento para direita fazendo swap apenas na ultima coluna
-        if posicao not in [21, 22, 23, 24] and no.estado[posicao + 4] == "|":
-
+        # Movimento para direita fazendo swap apenas na última coluna
+        if posicao % 4 != 3 and no.estado[posicao + 1] == "|":
             sucessor = np.copy(no.estado)
-            sucessor[posicao] = sucessor[posicao + 4]
-            sucessor[posicao + 4] = "R"
+            sucessor[posicao] = sucessor[posicao + 1]
+            sucessor[posicao + 1] = "R"
             return No(sucessor, no, "➡️")
         else:
-            None
+            return None
 
-    # funcao de agarrar feia q funciona
-    # ta tudo feio e com certeza tem um jeito melhor de fazer isso
-    # o "." representa um espaco vazio
     def _agarrar(self, posicao, no):
         # Verifica se há caixas para pegar
         if no.estado[posicao - 1] != ".":
@@ -144,10 +167,4 @@ class Braco(Problema):
             else:
                 posicao_soltar = posicao - 3
 
-            # Atualiza o estado para refletir a caixa sendo solta
-            sucessor = np.copy(no.estado)
-            sucessor[posicao_soltar] = no.estado[-1]
-            sucessor[-1] = "."
-            return No(sucessor, no, "Soltou")
-        else:
-            return None
+            # Atualiza o estado para

@@ -1,4 +1,4 @@
-from algoritmos.aux import Visitados
+from auxiliar.Visitados import Visitados
 from queue import PriorityQueue
 
 
