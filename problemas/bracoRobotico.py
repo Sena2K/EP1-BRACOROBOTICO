@@ -17,8 +17,8 @@ class Braco(Problema):
         self.estado_inicial = np.array([".", ".", ".", "|",
                                         "30", ".", ".", "|",
                                         "20", ".", ".", "|",
-                                        "10", "30", ".", "R",
-                                        ".", ".", ".", "|",
+                                        "10", ".", ".", "R",
+                                        "30", ".", ".", "|",
                                         ".", ".", ".", "|",
                                         "."])
 
@@ -59,6 +59,7 @@ class Braco(Problema):
             if no.estado[posicao] != ".":  # Verifica se há uma caixa na posição atual
                 peso_caixa = int(no.estado[posicao])  # Peso da caixa na posição atual
                 custo += int(peso_caixa / 10)  # Cada 10kg aumenta o custo em 1 energia
+        return custo
 
     def gerar_sucessores(self, no):
         estado = no.estado
