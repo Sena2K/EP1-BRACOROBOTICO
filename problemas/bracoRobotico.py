@@ -1,178 +1,152 @@
-import numpy as np
 import random
-
-import no
-from algoritmos.dijkstra import dijkstra, FilaPrioridade
+import numpy as np
 from no import No
 from problemas.problema import Problema
 
 
-class Box:
-    def __init__(self, weight):
-        self.weight = weight
+class Braco(Problema):
+    def __init__(self):
+
+        self.estado_objetivo = np.array(["30", "20", "10", "R",
+                                         ".", ".", ".", "|",
+                                         ".", ".", ".", "|",
+                                         "30", ".", ".", "|",
+                                         ".", ".", ".", "|",
+                                         ".", ".", ".", "|",
+                                         "."])
+        self.estado_inicial = np.array([".", ".", ".", "|",
+                                        "30", ".", ".", "|",
+                                        "20", ".", ".", "|",
+                                        "10", "30", ".", "R",
+                                        ".", ".", ".", "|",
+                                        ".", ".", ".", "|",
+                                        "."])
+
+    def iniciar(self):
+        self.no_raiz = No(self.estado_inicial)
+        return self.no_raiz
+
+    # Função auxiliar para imprimir
+    def imprimir(self, no):
+        estado = no.estado
+        maquina = ""
+
+        for i in range(6):
+            for j in range(4):
+                index = i * 4 + j
+                maquina += estado[index] + " "
+            maquina += "\n"
+
+        maquina += estado[-1]
+        return maquina
 
 
-class bracoRobotico:
-    def __init__(self, num_caixas, space_size):
-        self.initial_state = self.generate_initial_state(num_caixas, space_size)
+    def testar_objetivo(self, no):
+        return np.array_equal(no.estado, self.estado_objetivo)
+
+    def calcular_custo_energia(self, acao, posicao, no):
+        custo = 0
+        if acao == "⬅️" or acao == "➡️":
+            distancia = abs(posicao - np.where(no.estado == "R")[0][0])  # Calcula a distância percorrida
+            if distancia == 1:
+                custo += 1  # Movimento de uma casa custa 1 de energia
+            elif distancia > 2:
+                custo += int(distancia * 0.75)  # Movimento de mais de 2 casas custa 75% do movimento
+                if no.estado[posicao] != ".":  # Verifica se há uma caixa na posição atual
+                    peso_caixa = int(no.estado[posicao])  # Peso da caixa na posição atual
+                    custo += int(peso_caixa / 10)  # Cada 10kg aumenta o custo em 1 energia
+        elif acao == "Segurou":
+            if no.estado[posicao] != ".":  # Verifica se há uma caixa na posição atual
+                peso_caixa = int(no.estado[posicao])  # Peso da caixa na posição atual
+                custo += int(peso_caixa / 10)  # Cada 10kg aumenta o custo em 1 energia
+
+    def gerar_sucessores(self, no):
+        estado = no.estado
+        nos_sucessores = []
+
+        # encontra a posição do R (Braco)
+        posicao = np.where(estado == "R")[0][0]
+
+        expansoes = [self._direita, self._esquerda, self._agarrar, self._soltar]
+        random.shuffle(expansoes)
+        for expansao in expansoes:
+            no_sucessor = expansao(posicao, no)
+            if no_sucessor is not None: nos_sucessores.append(no_sucessor)
+
+        return nos_sucessores
 
 
-def is_goal_state(self, state):
-    # Verifica se todas as pilhas têm no máximo três caixas
-    for stack in state.stacks:
-        if len(stack) > 3:
-            return False
-    # Verifica se as caixas estão ordenadas por peso em cada pilha
-    for stack in state.stacks:
-        previous_weight = float(
-            '-inf')  # Inicializa a variável previous_weight com o valor negativo infinito para garantir, que na primeira iteração qualquer peso de caixa será considerado maior que previous_weigh
-        for box in stack:
-            if box.weight < previous_weight:
-                return False
-            previous_weight = box.weight
-    return True
+    def _esquerda(self, posicao, no):
+        # movimento para esquerda fazendo swap apenas na ultima coluna
+        if posicao not in [0, 1, 2] and no.estado[posicao - 4] == "|":
 
+            sucessor = np.copy(no.estado)
+            sucessor[posicao] = sucessor[posicao - 4]
+            sucessor[posicao - 4] = "R"
+            return No(sucessor, no, "⬅️")
+        else:
+            None
 
-def generate_initial_state(self, num_boxes, tamanho_espacos):
-    # Aqui vamos criar um estado inicial representando as pilhas de caixas
-    initial_state = []
+    def _direita(self, posicao, no):
+        # movimento para direita fazendo swap apenas na ultima coluna
+        if posicao not in [21, 22, 23, 24] and no.estado[posicao + 4] == "|":
 
-    # Iteramos sobre o número de pilhas desejadas
-    for _ in range(num_boxes):  # variavel n sera usada por isso o _
-        # Para cada pilha, criamos uma lista vazia para representar as caixas
-        stack = []
-        # Adicionamos o número correto de caixas à pilha
-        for _ in range(3):  # Limite de 3 caixas por pilha
-            box = Box(weight=random.randint(1, 80))  # Exemplo: peso aleatório de 1 a 80
-            stack.append(box)
-        # Adicionamos a pilha ao estado inicial
-        initial_state.append(stack)
+            sucessor = np.copy(no.estado)
+            sucessor[posicao] = sucessor[posicao + 4]
+            sucessor[posicao + 4] = "R"
+            return No(sucessor, no, "➡️")
+        else:
+            None
 
-    return initial_state
+    # funcao de agarrar feia q funciona
+    # ta tudo feio e com certeza tem um jeito melhor de fazer isso
+    # o "." representa um espaco vazio
+    def _agarrar(self, posicao, no):
+        # Verifica se há caixas para pegar
+        if no.estado[posicao - 1] != ".":
+            # Pega a caixa com base no peso
+            caixa_superior = None
+            caixa_inferior = no.estado[posicao - 1]
 
+            # Verifica se há uma caixa inferior na pilha
+            if no.estado[posicao - 2] != ".":
+                caixa_superior = no.estado[posicao - 2]
 
-def generate_successors(self, node):
-    successors = []
+            # Verifica se há uma caixa no meio da pilha
+            if no.estado[posicao - 3] != ".":
+                caixa_do_meio = no.estado[posicao - 3]
 
-    # Obtém o estado atual do nó
-    current_state = node.state
+            # Compara os pesos das caixas para determinar qual pegar
+            if caixa_superior is not None and caixa_superior > caixa_inferior:
+                caixa_superior, caixa_inferior = caixa_inferior, caixa_superior
+            if caixa_do_meio is not None and caixa_do_meio > caixa_inferior:
+                caixa_do_meio, caixa_inferior = caixa_inferior, caixa_do_meio
 
-    # Lista de ações possíveis
-    actions = ["move_left", "move_right", "stretch_one_step", "stretch_four_steps"]
+            # Atualiza o estado para refletir a caixa sendo agarrada
+            sucessor = np.copy(no.estado)
+            sucessor[-1] = caixa_inferior
+            sucessor[posicao - 1] = "."
+            return No(sucessor, no, "Segurou")
+        else:
+            return None
 
-    for action in actions:
-        # Copia o estado atual para que possamos modificá-lo
-        new_state = current_state.copy()
+    def _soltar(self, posicao, no):
+        # Verifica se o braço está segurando uma caixa
+        if no.estado[-1] != ".":
+            # Determina a posição onde a caixa será solta
+            if no.estado[posicao - 1] != ".":
+                posicao_soltar = posicao - 1
+            elif no.estado[posicao - 2] != ".":
+                posicao_soltar = posicao - 2
+            elif no.estado[posicao - 3] != ".":
+                posicao_soltar = posicao - 3
+            else:
+                posicao_soltar = posicao - 3
 
-        # Aplica a ação ao estado atual e obtém o novo estado
-        if action == "move_left":
-            new_state.move_left()
-        elif action == "move_right":
-            new_state.move_right()
-        elif action == "stretch_one_step":
-            new_state.stretch_one_step()
-        elif action == "stretch_four_steps":
-            new_state.stretch_four_steps()
-
-        # Adiciona o novo estado à lista de sucessores
-        successors.append(new_state)
-
-    return successors
-
-
-def move_left(self):
-    # Verifica se é possível mover para a esquerda
-    if self.can_move_left():
-        # Atualiza o estado do sistema para refletir o movimento para a esquerda
-        # Por exemplo, você pode diminuir a posição do braço em uma unidade
-        self.current_position -= 1
-        print("Braço movido para a esquerda.")
-    else:
-        print("Não é possível mover para a esquerda.")
-
-
-def can_move_left(self):
-    # Verifica se o braço pode se mover para a esquerda
-    # Por exemplo, você pode verificar se a posição atual não é a mais à esquerda
-    return self.current_position > 0
-
-
-def move_right(self):
-    # Verifica se é possível mover para a direita
-    if self.can_move_right():
-        # Atualiza o estado do sistema para refletir o movimento para a direita
-        # Por exemplo, você pode aumentar a posição do braço em uma unidade
-        self.current_position += 1
-        print("Braço movido para a direita.")
-    else:
-        print("Não é possível mover para a direita.")
-
-
-def can_move_right(self):
-    # Verifica se o braço pode se mover para a direita
-    # Por exemplo, você pode verificar se a posição atual não é a mais à direita
-    return self.current_position < self.max_position
-
-
-def stretch_one_step(self):
-    # Verifica se é possível esticar um passo para a frente
-    if self.can_stretch_one_step():
-        # Atualiza o estado do sistema para refletir o movimento para frente
-        # Por exemplo, você pode aumentar a posição do braço em uma unidade
-        self.current_position += 1
-        print("Braço esticado um passo para a frente.")
-    else:
-        print("Não é possível esticar um passo para a frente.")
-
-
-def can_stretch_one_step(self):
-    # Verifica se o braço pode esticar um passo para a frente
-    # Por exemplo, você pode verificar se a posição atual não é a mais avançada
-    return self.current_position < self.max_position
-
-
-def stretch_four_steps(self):
-    # Verifica se é possível esticar quatro passos para trás
-    if self.can_stretch_four_steps():
-        # Atualiza o estado do sistema para refletir o movimento para trás
-        # Por exemplo, você pode diminuir a posição do braço em quatro unidades
-        self.current_position -= 4
-        print("Braço esticado quatro passos para trás.")
-    else:
-        print("Não é possível esticar quatro passos para trás.")
-
-
-def can_stretch_four_steps(self):
-    # Verifica se o braço pode esticar quatro passos para trás
-    return self.current_position >= 4  # Supondo que você não pode ir além da posição inicial
-
-def greedy_search(self):
-    # Implementação do algoritmo Greedy Search
-    current_state = self.initial_state
-    visited_states = set()
-
-    while not self.is_goal_state(current_state):
-        visited_states.add(current_state)
-        successors = self.get_successors(current_state)
-        # Escolhe o próximo estado com base apenas no custo imediato
-        current_state = min(successors, key=lambda s: s.cost)
-
-    return visited_states
-
-
-def imprimir(self, no):
-    estado = no.estado
-    print("Estado atual:")
-    print(''.join([f"\r{' '.join(estado[i:i + 8])}\n" for i in range(0, 64, 8)]))
-
-
-def print_progress(self, current_state):
-    print("Progresso do algoritmo:")
-    print("Estado atual:")
-    print(' '.join(current_state))
-
-
-resultado_dijkstra = dijkstra(bracoRobotico)
-print("Resultado do Dijkstra:", resultado_dijkstra)
-fila = FilaPrioridade()
-fila.push(0, No)
+            # Atualiza o estado para refletir a caixa sendo solta
+            sucessor = np.copy(no.estado)
+            sucessor[posicao_soltar] = no.estado[-1]
+            sucessor[-1] = "."
+            return No(sucessor, no, "Soltou")
+        else:
+            return None

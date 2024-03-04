@@ -1,16 +1,19 @@
-from auxiliar.Visitados import vertice_caminho
-from problemas.problema import Problema
-from algoritmos.a_estrela import a_estrela
-from problemas.bracoRobotico import bracoRobotico
+from algoritmos.dfs import dfs
+from auxiliar.Visitados import vertice_caminho, no_caminho
+from problemas.bracoRobotico import Braco
 
-def main():
-    problema = bracoRobotico()
+if __name__ == "__main__":
+    problema = Braco()
 
-    qtd_estados_visitados, no_solucao = a_estrela(problema)
+    (qtd_estados_visitados, no_solucao) = dfs(problema)
+    # (qtd_estados_visitados, no_solucao) = bfs(problema)
+    # (qtd_estados_visitados, no_solucao) = a_estrela(problema)
+    # (qtd_estados_visitados, no_solucao) = dijkstra(problema)
 
-    if no_solucao is None:
-        print("Não houve solução para o problema")
+    if (no_solucao is None):
+        print("Não houve solução ao problema")
     else:
+        # caminho = no_caminho(no_solucao)
         caminho = vertice_caminho(no_solucao)
         print("Solução:")
         print(caminho)
@@ -18,9 +21,3 @@ def main():
     print(f"Estados visitados: {qtd_estados_visitados}")
     print("Estado Inicial:")
     print(problema.imprimir(problema.no_raiz))
-
-    custo = no_solucao.custoTotal()
-    print(f"Custo da solução: {custo}")
-
-if __name__ == "__main__":
-    main()
