@@ -1,170 +1,121 @@
-import random
-import numpy as np
-from no import No
-from problemas.problema import Problema
+from copy import deepcopy
+import time as sysTime
 
-
-class Braco(Problema):
+class Node:
     def __init__(self):
-        self.estado_objetivo = np.array(["30", "20", "10", "R", ".", ".", ".", "|",
-                                         ".", ".", ".", "|", ".", ".", ".", "|",
-                                         ".", ".", ".", "|", ".", ".", ".", "|",
-                                         "60", "30", "20", "5", "R", ".", ".", "|",
-                                         ".", ".", ".", "|", ".", ".", ".", "|",
-                                         ".", ".", ".", "|", ".", ".", ".", "|",
-                                         "."])
-        self.estado_inicial = np.array([".", ".", ".", "R", ".", ".", ".", "|",
-                                        "30", "10", ".", "|", "5", ".", ".", "|",
-                                        "20", "20", ".", "|", ".", ".", ".", "|",
-                                        "10", "60", ".", "R", ".", ".", ".", "|",
-                                        ".", ".", ".", "|", ".", ".", ".", "|",
-                                        ".", ".", ".", "|", ".", ".", ".", "|",
-                                        "."])
+        self.state = [[], [], [], [], [], [], [], [], []]  # Estado inicial com nove espaços vazios
+        self.arm_position = 0  # Posição inicial do braço robótico (esquerda)
+        self.nodeNumber = 0
+        self.status = 'idle'
+        self.neighbours = []
+        self.parent = None
+        self.children = []
+        self.point = 10
+        self.max_boxes_per_pile = 3  # Número máximo de caixas por pilha
+        self.energy = 0  # Energia inicial do braço robótico
 
-        # Método para inicializar o estado final com as caixas empilhadas corretamente
-        self.estado_final = self.inicializar_estado_final()
+def evalFunc(node):
+    node.point = 10  # Reiniciar os pontos
+
+    # Calcular pontos com base na posição das caixas
+    weights = [0, 3, 6]  # Pesos das caixas (mais pesado para o mais leve)
+
+    for i, pile in enumerate(node.state):
+        if len(pile) > 0:
+            if pile[-1] != 0:  # Se a caixa não for vazia
+                node.point -= weights[pile[-1] - 1]  # Subtrair pontos com base no peso da caixa
+
+def move(node, source, target):
+    new_node = Node()  # Criar uma nova instância de Node
+    new_node.state = deepcopy(node.state)  # Copiar o estado atual
+
+    if source != target:  # Verificar se a fonte e o destino são diferentes
+        if len(new_node.state[target]) < new_node.max_boxes_per_pile or len(new_node.state[source]) > 0:
+            # Verificar se o destino tem espaço vazio ou se a fonte tem caixas
+            box = new_node.state[source].pop()  # Remover a caixa da fonte
+            new_node.state[target].append(box)  # Adicionar a caixa ao destino
+
+    return new_node
 
 
-    def inicializar_estado_final(self):
-        estado_final = np.full((6, 8), ".", dtype=str)  # Inicializa o estado final com pontos
+def moveBoxes(node):
+    # Função para mover as caixas para empilhá-las do mais pesado para o mais leve
+    for i in range(2, -1, -1):  # Loop reverso para começar com a caixa mais pesada
+        for j, pile in enumerate(node.state):
+            if len(pile) > 0 and pile[-1] == i + 1:  # Se a caixa for encontrada na pilha
+                for k in range(2, -1, -1):  # Loop reverso para encontrar uma pilha vazia ou uma pilha com caixa mais leve
+                    if len(node.state[k]) == 0 or node.state[k][-1] > i + 1:
+                        new_node = move(node, j, k)  # Mover a caixa para a nova posição
+                        return new_node  # Retorna o novo estado após o movimento
 
-        # Cada coluna é uma lista que será preenchida com as caixas
-        colunas = [[] for _ in range(8)]
+    return None  # Retorna None se não houver mais movimentos possíveis
 
-        # Preenche as caixas nas colunas de acordo com o estado objetivo
-        index = 0
-        for coluna in range(8):
-            for linha in range(6):
-                if self.estado_objetivo[index] != ".":
-                    colunas[coluna].append(self.estado_objetivo[index])
-                index += 1
+def printState(state):
+    for pile in state:
+        print(pile)
 
-        # Verifica se alguma pilha tem mais de 4 caixas
-        for pilha in colunas:
-            if len(pilha) > 4:
-                raise ValueError("Erro: Uma pilha não pode ter mais de 4 caixas.")
+def bestFS():
+    global parentList, nodenumber, childList, targetFound
 
-        # Empilha as caixas em cada coluna no estado final
-        for coluna, pilha in enumerate(colunas):
-            for linha, caixa in enumerate(pilha):
-                estado_final[linha][coluna] = caixa
+    leastPoint = 10
+    for node in parentList:
+        evalFunc(node)  # Avaliar o estado atual
+        if node.point < leastPoint:
+            leastPoint = node.point
 
-        return estado_final
+    for node in parentList:
+        if targetFound:
+            break
 
-    def iniciar(self):
-        self.no_raiz = No(self.estado_objetivo)
-        return self.no_raiz
+        if node.point == leastPoint:
+            print('\nNode Pai:', node.nodeNumber)
+            printState(node.state)
 
-    # Função auxiliar para imprimir
-    def imprimir(self, no):
-        estado = no.estado
-        maquina = ""
+            childnode = moveBoxes(node)  # Tentar mover as caixas para o próximo estado
 
-        for i in range(6):
-            for j in range(8):
-                index = i * 8 + j
-                maquina += estado[index] + " "
-            maquina += "\n"
+            if childnode is not None:
+                nodenumber += 1
+                childnode.nodeNumber = nodenumber
+                childnode.parent = node
+                parentList.append(childnode)
+                print('Node Filho:', childnode.nodeNumber)
+                printState(childnode.state)
 
-        maquina += estado[-1]
-        return maquina
+                if childnode.state == finalState:  # Verificar se o estado atual é o estado final
+                    print('\nObjetivo final encontrado')
+                    targetFound = True
 
-    def testar_objetivo(self, no):
-        return np.array_equal(no.estado, self.estado_objetivo)
+def readState():
+    print('Digite os detalhes do Estado Inicial')
+    initial_state = [[], [], [], [], [], [], [], [], []]
 
-    def calcular_custo_energia(self, acao, posicao, no):
-        custo = 0
-        if acao in ["⬅️", "➡️"]:
-            distancia = abs(posicao - np.where(no.estado == "R")[0][0])  # Calcula a distância percorrida
-            if distancia == 1:
-                custo += 1  # Movimento de uma casa custa 1 de energia
-            elif distancia > 2:
-                custo += int(distancia * 0.75)  # Movimento de mais de 2 casas custa 75% do movimento
-                if no.estado[posicao] != ".":  # Verifica se há uma caixa na posição atual
-                    peso_caixa = int(no.estado[posicao])  # Peso da caixa na posição atual
-                    custo += int(peso_caixa / 10)  # Cada 10kg aumenta o custo em 1 energia
-        elif acao == "Segurou":
-            if no.estado[posicao] != ".":  # Verifica se há uma caixa na posição atual
-                peso_caixa = int(no.estado[posicao])  # Peso da caixa na posição atual
-                custo += int(peso_caixa / 10)  # Cada 10kg aumenta o custo em 1 energia
-        return custo
-
-    def gerar_sucessores(self, no):
-        estado = no.estado
-        nos_sucessores = []
-
-        # Encontra a posição do R (Braço)
-        posicao = np.where(estado == "R")[0][0]
-
-        expansoes = [self._direita, self._esquerda, self._agarrar, self._soltar]
-        random.shuffle(expansoes)
-        for expansao in expansoes:
-            no_sucessor = expansao(posicao, no)
-            if no_sucessor is not None:
-                nos_sucessores.append(no_sucessor)
-
-        return nos_sucessores
-
-    def _esquerda(self, posicao, no):
-        # Movimento para esquerda fazendo swap apenas na última coluna
-        if posicao % 4 != 0 and no.estado[posicao - 1] == "|":
-            sucessor = np.copy(no.estado)
-            sucessor[posicao] = sucessor[posicao - 1]
-            sucessor[posicao - 1] = "R"
-            return No(sucessor, no, "⬅️")
-        else:
-            return None
-
-    def _direita(self, posicao, no):
-        # Movimento para direita fazendo swap apenas na última coluna
-        if posicao % 4 != 3 and no.estado[posicao + 1] == "|":
-            sucessor = np.copy(no.estado)
-            sucessor[posicao] = sucessor[posicao + 1]
-            sucessor[posicao + 1] = "R"
-            return No(sucessor, no, "➡️")
-        else:
-            return None
-
-    def _agarrar(self, posicao, no):
-        # Verifica se há caixas para pegar
-        if no.estado[posicao - 1] != ".":
-            # Pega a caixa com base no peso
-            caixa_superior = None
-            caixa_inferior = no.estado[posicao - 1]
-
-            # Verifica se há uma caixa inferior na pilha
-            if no.estado[posicao - 2] != ".":
-                caixa_superior = no.estado[posicao - 2]
-
-            # Verifica se há uma caixa no meio da pilha
-            if no.estado[posicao - 3] != ".":
-                caixa_do_meio = no.estado[posicao - 3]
-
-            # Compara os pesos das caixas para determinar qual pegar
-            if caixa_superior is not None and caixa_superior > caixa_inferior:
-                caixa_superior, caixa_inferior = caixa_inferior, caixa_superior
-            if caixa_do_meio is not None and caixa_do_meio > caixa_inferior:
-                caixa_do_meio, caixa_inferior = caixa_inferior, caixa_do_meio
-
-            # Atualiza o estado para refletir a caixa sendo agarrada
-            sucessor = np.copy(no.estado)
-            sucessor[-1] = caixa_inferior
-            sucessor[posicao - 1] = "."
-            return No(sucessor, no, "Segurou")
-        else:
-            return None
-
-    def _soltar(self, posicao, no):
-        # Verifica se o braço está segurando uma caixa
-        if no.estado[-1] != ".":
-            # Determina a posição onde a caixa será solta
-            if no.estado[posicao - 1] != ".":
-                posicao_soltar = posicao - 1
-            elif no.estado[posicao - 2] != ".":
-                posicao_soltar = posicao - 2
-            elif no.estado[posicao - 3] != ".":
-                posicao_soltar = posicao - 3
+    for i in range(3):
+        while True:
+            weight = int(input(f'Digite o peso da caixa {i + 1}: '))
+            if 1 <= weight <= 3:
+                initial_state[weight - 1].append(weight)
+                break
             else:
-                posicao_soltar = posicao - 3
+                print('Peso inválido. Por favor, digite um peso entre 1 e 3.')
 
-            # Atualiza o estado para
+    return initial_state
+
+# Definir o estado final
+finalState = [[3], [2], [1], [], [], [], [], [], []]
+
+# Definir o estado inicial
+initialState = readState()
+
+# Configurações iniciais
+states = [initialState]
+nodenumber = 1
+targetFound = False
+
+# Criar o nó raiz
+root = Node()
+root.state = initialState
+root.nodeNumber = nodenumber
+parentList = [root]
+
+# Executar o algoritmo de busca
+bestFS()
