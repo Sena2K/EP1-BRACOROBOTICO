@@ -1,6 +1,7 @@
 import random
 import numpy as np
 from no import No
+from problemas.Custo import Custo
 from problemas.problema import Problema
 
 
@@ -20,6 +21,8 @@ class bracoRobotico(Problema):
                                         "0", "0", "0", "|",
                                         "0", "0", "0", "|",
                                         "0"])
+
+        self.custo_calculator = Custo()
 
     def iniciar(self):
         # Inicia o problema retornando o nó raiz com o estado inicial
@@ -157,25 +160,8 @@ class bracoRobotico(Problema):
         return None
 
     def custo(self, no, no_sucessor):
-        # Calcula o custo de uma ação
-        valor_custo = 1
-        estadoAtual = np.where(no.estado == "#")[0][0]  # Posição atual do braço
-        estadoFuturo = np.where(no_sucessor.estado == "#")[0][0]  # Posição futura do braço
-
-        # Se a posição futura do braço for igual à posição atual, o custo é zero
-        if estadoFuturo == estadoAtual:
-            return 0
-
-        # Calcula o custo baseado na distância percorrida pelo braço
-        distancia = abs(estadoFuturo - estadoAtual)
-        valor_custo += distancia * 0.75
-
-        # Se o braço estiver segurando uma caixa, adiciona um custo adicional baseado no peso da caixa
-        if no.estado[-1] != "0":
-            peso_caixa = int(no.estado[-1]) / 10
-            valor_custo += peso_caixa
-
-        return valor_custo
+        # Chama o método calcular_custo da instância de Custo
+        return self.custo_calculator.calcular_custo(no, no_sucessor)
 
     def heuristica(self, no):
         # Função heurística para estimar o custo de alcançar o objetivo
