@@ -9,6 +9,7 @@ class BracoRobotico(Problema):
     def __init__(self):
         self.num_linhas = 6
         self.caixas = 6
+        self.pilhaMaxima = 3
         self.estado_inicial = np.array([40, "0", "0", "#",
                                         10, "0", "0", "|",
                                         30, 50, "0", "|",
@@ -37,21 +38,37 @@ class BracoRobotico(Problema):
         return maquina
 
     def testar_objetivo(self, no):
+        # Obtém o estado atual do nó
         estado = no.estado
+        # Inicializa a contagem de pilhas completas
         count_pilhas = 0
-        qtd_pilhas = np.ceil(self.caixas / 3)
+        # Calcula o número total de pilhas completas necessárias
+        qtd_pilhas_maximas = np.ceil(self.caixas / 3)
 
+        # Itera sobre as linhas da configuração do braço robótico
         for i in range(self.num_linhas):
+            # Inicializa uma lista para representar a pilha atual
             pilha_atual = []
+            # Itera sobre as colunas da configuração do braço robótico
             for j in range(4):
+                # Calcula o índice correspondente à posição atual
                 index = i * 4 + j
+                # Verifica se o elemento na posição atual não é um espaço vazio ou um separador
                 if estado[index] not in ["0", "#", "|"]:
+                    # Adiciona a altura da caixa à pilha atual
                     pilha_atual.append(int(estado[index]))
+                # Verifica se a pilha atual atingiu o limite de altura (3 caixas)
                 if len(pilha_atual) == 3:
+                    # Verifica se as caixas na pilha atual estão em ordem decrescente
                     if pilha_atual[0] >= pilha_atual[1] >= pilha_atual[2]:
+                        # Incrementa a contagem de pilhas completas
                         count_pilhas += 1
+                    # Reinicia a lista da pilha atual para processar a próxima pilha
                     pilha_atual = []
-        return count_pilhas == qtd_pilhas
+
+        # Retorna True se o número de pilhas completas for igual ao número necessário, caso contrário, False
+        return count_pilhas == qtd_pilhas_maximas
+
     def gerar_sucessores(self, no):
         estado = no.estado
         nos_sucessores = []
@@ -104,22 +121,39 @@ class BracoRobotico(Problema):
         return None
 
     def _empilhar(self, posicao, no):
+        # Verifica se há uma caixa na garra do braço robótico
         if no.estado[-1] != "0":
+            # Verifica se há espaço disponível para empilhar a caixa na posição especificada
             if no.estado[posicao - 3] != "0" and no.estado[posicao - 2] != "0" and no.estado[posicao - 1] == "0":
+                # Cria uma cópia do estado atual
                 sucessor = np.copy(no.estado)
+                # Move a caixa da garra do braço robótico para a posição especificada
                 sucessor[posicao - 1] = no.estado[-1]
+                # Libera a garra do braço robótico
                 sucessor[-1] = "0"
+                # Retorna o novo nó representando o estado resultante
                 return No(sucessor, no)
+            # Verifica se há espaço disponível para empilhar a caixa na posição especificada
             elif no.estado[posicao - 3] != "0" and no.estado[posicao - 2] == "0":
+                # Cria uma cópia do estado atual
                 sucessor = np.copy(no.estado)
+                # Move a caixa da garra do braço robótico para a posição especificada
                 sucessor[posicao - 2] = no.estado[-1]
+                # Libera a garra do braço robótico
                 sucessor[-1] = "0"
+                # Retorna o novo nó representando o estado resultante
                 return No(sucessor, no)
+            # Verifica se há espaço disponível para empilhar a caixa na posição especificada
             elif no.estado[posicao - 3] == "0":
+                # Cria uma cópia do estado atual
                 sucessor = np.copy(no.estado)
+                # Move a caixa da garra do braço robótico para a posição especificada
                 sucessor[posicao - 3] = no.estado[-1]
+                # Libera a garra do braço robótico
                 sucessor[-1] = "0"
+                # Retorna o novo nó representando o estado resultante
                 return No(sucessor, no)
+        # Retorna None se não for possível empilhar a caixa
         return None
 
     def custo(self, no, no_sucessor):
