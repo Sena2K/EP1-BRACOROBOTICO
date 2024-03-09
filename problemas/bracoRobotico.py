@@ -14,7 +14,6 @@ class BracoRobotico(Problema):
                                         30, 50, "0", "|",
                                         30, "0", "0", "|",
                                         55, "0", "0", "|",
-                                        "0", 33, 11, "|",
                                         44, "0", "0", "|",
                                         "0"])
         self.custo_calculator = Custo()
