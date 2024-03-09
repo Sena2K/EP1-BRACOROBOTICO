@@ -12,7 +12,7 @@ class bracoRobotico(Problema):
         for i in range(self.num_linhas):
             for j in range(4):
                 if i == 0 and j == 3:
-                    estado_inicial.append("R")  # Inserindo o braço na posição inicial
+                    estado_inicial.append("#")  # Inserindo o braço na posição inicial
                 elif j == 3:
                     estado_inicial.append("|")  # Adicionando separadores de pilha
                 else:
