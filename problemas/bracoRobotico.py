@@ -38,34 +38,32 @@ class bracoRobotico(Problema):
 
         maquina += estado[-1]
         return maquina
-    def box_number(self, no):
-        # Função para contar o número de caixas na configuração atual
-        count = 0
-        for index, estado in enumerate(no.estado):
-            if self.verificar_numero(no, index) and estado != "0":
-                count += 1
-        return count
 
     def testar_objetivo(self, no):
         # Testa se o objetivo foi alcançado (todas as pilhas corretamente empilhadas)
         estado = no.estado
         count_pilhas = 0
         pilhas_possiveis = np.ceil(self.box_number(no) / 3)  # Calcula o número de pilhas possíveis
+
         for i in range(self.num_linhas):
+            pilha_atual = []
             for j in range(4):
                 index = i * 4 + j
-                if self.verificar_numero(no, index):
-                    if self.verificar_numero(no, index + 1) and self.verificar_numero(no, index + 2):
-                        # Verifica se é possível empilhar corretamente
-                        if int(estado[index]) >= int(estado[index + 1]) and int(estado[index + 1] >= estado[index + 2]):
-                            count_pilhas += 1
+                if estado[index] != "0" and estado[index] != "#" and estado[index] != "|":
+                    pilha_atual.append(int(estado[index]))
+                if len(pilha_atual) == 3:  # Se tivermos 3 caixas, verifique se estão empilhadas corretamente
+                    if pilha_atual[0] >= pilha_atual[1] and pilha_atual[1] >= pilha_atual[2]:
+                        count_pilhas += 1
+                    pilha_atual = []  # Reinicie a pilha para a próxima
         return count_pilhas == pilhas_possiveis
 
-    def verificar_numero(self, no, index):
-        # Verifica se o elemento na posição index é um número válido
-        estado = no.estado
-        if estado[index] != "0" and estado[index] != "#" and estado[index] != "|":
-            return True
+    def box_number(self, no):
+        # Função para contar o número de caixas na configuração atual
+        count = 0
+        for index, estado in enumerate(no.estado):
+            if estado != "0" and estado != "#" and estado != "|":
+                count += 1
+        return count
 
     def gerar_sucessores(self, no):
         # Função para gerar os sucessores válidos a partir de um estado atual
@@ -87,46 +85,41 @@ class bracoRobotico(Problema):
     def _esquerda(self, posicao, no):
         # Movimento para a esquerda (troca de posição com o elemento à esquerda)
         if posicao not in [0, 1, 2, 3] and no.estado[posicao - 4] == "|":
-
             sucessor = np.copy(no.estado)
             sucessor[posicao] = sucessor[posicao - 4]
             sucessor[posicao - 4] = "#"
             return No(sucessor, no, "⬅️")
         else:
-            None
+            return None
 
     def _esquerda2(self, posicao, no):
-
         if posicao not in [3, 7] and no.estado[posicao - 8] == "|":
-
             sucessor = np.copy(no.estado)
             sucessor[posicao] = sucessor[posicao - 8]
             sucessor[posicao - 8] = "#"
             return No(sucessor, no, "⬅️⬅️")
         else:
-            None
+            return None
 
     def _direita(self, posicao, no):
         # Movimento para a direita (troca de posição com o elemento à direita)
         if posicao not in [21, 22, 23, 24] and no.estado[posicao + 4] == "|":
-
             sucessor = np.copy(no.estado)
             sucessor[posicao] = sucessor[posicao + 4]
             sucessor[posicao + 4] = "#"
             return No(sucessor, no, "➡️")
         else:
-            None
+            return None
 
     def _direita2(self, posicao, no):
         # Movimento para a direita (troca de posição com o elemento à direita)
         if posicao not in [23, 19] and no.estado[posicao + 8] == "|":
-
             sucessor = np.copy(no.estado)
             sucessor[posicao] = sucessor[posicao + 8]
             sucessor[posicao + 8] = "#"
             return No(sucessor, no, "➡️➡️")
         else:
-            None
+            return None
 
     def _agarrar(self, posicao, no):
         # Função para agarrar uma caixa
@@ -141,11 +134,7 @@ class bracoRobotico(Problema):
                 sucessor[-1] = no.estado[posicao - 2]
                 sucessor[posicao - 2] = "0"
                 return No(sucessor, no)
-
-        # Se não houver caixa para agarrar, retorna None
         return None
-
-        None
 
     def _soltar(self, posicao, no):
         # Função para soltar uma caixa
@@ -165,7 +154,7 @@ class bracoRobotico(Problema):
                 sucessor[posicao - 3] = no.estado[-1]
                 sucessor[-1] = "0"
                 return No(sucessor, no)
-            return None
+        return None
 
     def custo(self, no, no_sucessor):
         # Calcula o custo de uma ação
