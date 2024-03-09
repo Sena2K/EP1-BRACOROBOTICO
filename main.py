@@ -5,10 +5,10 @@ from algoritmos.dijkstra import dijkstra
 from auxiliar.Visitados import vertice_caminho, no_caminho
 from algoritmos.ganancioso import ganancioso
 
-from problemas.bracoRobotico import bracoRobotico
+from problemas.bracoRobotico import BracoRobotico
 
 if __name__ == "__main__":
-    problema = bracoRobotico()
+    problema = BracoRobotico()
 
     # (qtd_estados_visitados, no_solucao) = dfs(problema)
     # (qtd_estados_visitados, no_solucao) = bfs(problema)

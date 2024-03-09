@@ -1,11 +1,11 @@
-import random
 import numpy as np
-from no import No
+
 from problemas.Custo import Custo
 from problemas.problema import Problema
+from no import No
 
 
-class bracoRobotico(Problema):
+class BracoRobotico(Problema):
     def __init__(self):
         # Inicializa o problema do braço robótico
         # Define o número de linhas na configuração do braço
@@ -78,51 +78,40 @@ class bracoRobotico(Problema):
 
         # Define as operações possíveis (movimentos do braço)
         expansoes = [self._direita, self._esquerda, self._agarrar, self._soltar, self._esquerda2, self._direita2]
-        random.shuffle(expansoes)  # Embaralha as operações para tornar a busca menos determinística
+        np.random.shuffle(expansoes)  # Embaralha as operações para tornar a busca menos determinística
         for expansao in expansoes:
             no_sucessor = expansao(posicao, no)
-            if no_sucessor is not None: nos_sucessores.append(no_sucessor)
+            if no_sucessor is not None:
+                nos_sucessores.append(no_sucessor)
 
         return nos_sucessores
 
-    def _esquerda(self, posicao, no):
-        # Movimento para a esquerda (troca de posição com o elemento à esquerda)
-        if posicao not in [0, 1, 2, 3] and no.estado[posicao - 4] == "|":
+    def _mover_braco(self, posicao, no, direcao, passos):
+        # Movimento do braço (troca de posição com o elemento na direção especificada)
+        nova_posicao = posicao + passos
+        if 0 <= nova_posicao < len(no.estado) and no.estado[nova_posicao] == "|":
             sucessor = np.copy(no.estado)
-            sucessor[posicao] = sucessor[posicao - 4]
-            sucessor[posicao - 4] = "#"
-            return No(sucessor, no, "⬅️")
+            sucessor[posicao] = sucessor[nova_posicao]
+            sucessor[nova_posicao] = "#"
+            return No(sucessor, no, direcao)
         else:
             return None
 
+    def _esquerda(self, posicao, no):
+        # Movimento para a esquerda (troca de posição com o elemento à esquerda)
+        return self._mover_braco(posicao, no, "←", -4)
+
     def _esquerda2(self, posicao, no):
-        if posicao not in [3, 7] and no.estado[posicao - 8] == "|":
-            sucessor = np.copy(no.estado)
-            sucessor[posicao] = sucessor[posicao - 8]
-            sucessor[posicao - 8] = "#"
-            return No(sucessor, no, "⬅️⬅️")
-        else:
-            return None
+        # Movimento para a esquerda (troca de posição com o elemento à esquerda)
+        return self._mover_braco(posicao, no, "←←", -8)
 
     def _direita(self, posicao, no):
         # Movimento para a direita (troca de posição com o elemento à direita)
-        if posicao not in [21, 22, 23, 24] and no.estado[posicao + 4] == "|":
-            sucessor = np.copy(no.estado)
-            sucessor[posicao] = sucessor[posicao + 4]
-            sucessor[posicao + 4] = "#"
-            return No(sucessor, no, "➡️")
-        else:
-            return None
+        return self._mover_braco(posicao, no, "→", 4)
 
     def _direita2(self, posicao, no):
         # Movimento para a direita (troca de posição com o elemento à direita)
-        if posicao not in [23, 19] and no.estado[posicao + 8] == "|":
-            sucessor = np.copy(no.estado)
-            sucessor[posicao] = sucessor[posicao + 8]
-            sucessor[posicao + 8] = "#"
-            return No(sucessor, no, "➡️➡️")
-        else:
-            return None
+        return self._mover_braco(posicao, no, "→→", 8)
 
     def _agarrar(self, posicao, no):
         # Função para agarrar uma caixa
