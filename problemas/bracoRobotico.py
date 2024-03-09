@@ -1,4 +1,3 @@
-import math
 import random
 import numpy as np
 from no import No
@@ -7,32 +6,20 @@ from problemas.problema import Problema
 
 class bracoRobotico(Problema):
     def __init__(self):
+        # Inicializa o problema do braço robótico
+        # Define o número de linhas na configuração do braço
         self.num_linhas = 6
-        estado_inicial = []
-        for i in range(self.num_linhas):
-            for j in range(4):
-                if i == 0 and j == 3:
-                    estado_inicial.append("#")  # Inserindo o braço na posição inicial
-                elif j == 3:
-                    estado_inicial.append("|")  # Adicionando separadores de pilha
-                else:
-                    estado_inicial.append("0")  # Preenchendo com caixas vazias
-            estado_inicial.append("0")  # Adicionando uma posição extra no final de cada linha
 
-        # Posições aleatórias para as caixas
-        posicoes_disponiveis = [(i, j) for i in range(self.num_linhas) for j in range(4)]
-        random.shuffle(posicoes_disponiveis)
-
-        # Gerando uma quantidade aleatória de caixas (de 1 a 9)
-        num_caixas = 5
-        for _ in range(num_caixas):
-            if posicoes_disponiveis:
-                posicao = posicoes_disponiveis.pop()
-                peso_caixa = str(random.randint(1, 10))  # Peso da caixa aleatório entre 1 e 10
-                estado_inicial[posicao[0] * 5 + posicao[1]] = peso_caixa  # Inserindo o peso da caixa na posição
-
-        # Convertendo o estado inicial para um array numpy
-        self.estado_inicial = np.array(estado_inicial).reshape((self.num_linhas, 5))
+        # Define o estado inicial do problema
+        # Cada linha representa uma etapa do braço robótico, com valores para posição, peso e status
+        self.estado_inicial = np.array([40, "0", "0", "#",  # Exemplo de configuração inicial do braço
+                                        10, "0", "0", "|",
+                                        30, 50, "0", "|",
+                                        30, "0", "0", "|",
+                                        55, "0", "0", "|",
+                                        "0", "0", "0", "|",
+                                        "0", "0", "0", "|",
+                                        "0"])
 
     def iniciar(self):
         # Inicia o problema retornando o nó raiz com o estado inicial
@@ -63,18 +50,15 @@ class bracoRobotico(Problema):
         # Testa se o objetivo foi alcançado (todas as pilhas corretamente empilhadas)
         estado = no.estado
         count_pilhas = 0
-        # Calcula o número de pilhas possíveis de forma clara e compreensível
-        pilhas_possiveis = math.ceil(self.box_number(no) / 3)
+        pilhas_possiveis = np.ceil(self.box_number(no) / 3)  # Calcula o número de pilhas possíveis
         for i in range(self.num_linhas):
             for j in range(4):
                 index = i * 4 + j
-                if self.verificar_numero(no, index) and \
-                        self.verificar_numero(no, index + 1) and \
-                        self.verificar_numero(no, index + 2):
-                    # Verifica se é possível empilhar corretamente
-                    if int(estado[index]) >= int(estado[index + 1]) and \
-                            int(estado[index + 1]) >= int(estado[index + 2]):
-                        count_pilhas += 1
+                if self.verificar_numero(no, index):
+                    if self.verificar_numero(no, index + 1) and self.verificar_numero(no, index + 2):
+                        # Verifica se é possível empilhar corretamente
+                        if int(estado[index]) >= int(estado[index + 1]) and int(estado[index + 1] >= estado[index + 2]):
+                            count_pilhas += 1
         return count_pilhas == pilhas_possiveis
 
     def verificar_numero(self, no, index):
@@ -84,13 +68,11 @@ class bracoRobotico(Problema):
             return True
 
     def gerar_sucessores(self, no):
-        """
-        Função para gerar os sucessores válidos a partir de um estado atual
-        """
+        # Função para gerar os sucessores válidos a partir de um estado atual
         estado = no.estado
         nos_sucessores = []
 
-        # Encontra a posição do braço robótico (#)
+        # Encontra a posição do braço robótico (R)
         posicao = np.where(estado == "#")[0][0]
 
         # Define as operações possíveis (movimentos do braço)
@@ -98,50 +80,53 @@ class bracoRobotico(Problema):
         random.shuffle(expansoes)  # Embaralha as operações para tornar a busca menos determinística
         for expansao in expansoes:
             no_sucessor = expansao(posicao, no)
-            if no_sucessor is not None:
-                nos_sucessores.append(no_sucessor)
+            if no_sucessor is not None: nos_sucessores.append(no_sucessor)
 
         return nos_sucessores
 
     def _esquerda(self, posicao, no):
-        """
-        Movimento para a esquerda (troca de posição com o elemento à esquerda)
-        """
+        # Movimento para a esquerda (troca de posição com o elemento à esquerda)
         if posicao not in [0, 1, 2, 3] and no.estado[posicao - 4] == "|":
+
             sucessor = np.copy(no.estado)
-            sucessor[posicao], sucessor[posicao - 4] = sucessor[posicao - 4], "#"
+            sucessor[posicao] = sucessor[posicao - 4]
+            sucessor[posicao - 4] = "#"
             return No(sucessor, no, "⬅️")
-        return None
+        else:
+            None
 
     def _esquerda2(self, posicao, no):
-        """
-        Movimento para a esquerda (troca de posição com o elemento 2 espaços à esquerda)
-        """
+
         if posicao not in [3, 7] and no.estado[posicao - 8] == "|":
+
             sucessor = np.copy(no.estado)
-            sucessor[posicao], sucessor[posicao - 8] = sucessor[posicao - 8], "#"
+            sucessor[posicao] = sucessor[posicao - 8]
+            sucessor[posicao - 8] = "#"
             return No(sucessor, no, "⬅️⬅️")
-        return None
+        else:
+            None
 
     def _direita(self, posicao, no):
-        """
-        Movimento para a direita (troca de posição com o elemento à direita)
-        """
+        # Movimento para a direita (troca de posição com o elemento à direita)
         if posicao not in [21, 22, 23, 24] and no.estado[posicao + 4] == "|":
+
             sucessor = np.copy(no.estado)
-            sucessor[posicao], sucessor[posicao + 4] = sucessor[posicao + 4], "#"
+            sucessor[posicao] = sucessor[posicao + 4]
+            sucessor[posicao + 4] = "#"
             return No(sucessor, no, "➡️")
-        return None
+        else:
+            None
 
     def _direita2(self, posicao, no):
-        """
-        Movimento para a direita (troca de posição com o elemento 2 espaços à direita)
-        """
+        # Movimento para a direita (troca de posição com o elemento à direita)
         if posicao not in [23, 19] and no.estado[posicao + 8] == "|":
+
             sucessor = np.copy(no.estado)
-            sucessor[posicao], sucessor[posicao + 8] = sucessor[posicao + 8], "#"
+            sucessor[posicao] = sucessor[posicao + 8]
+            sucessor[posicao + 8] = "#"
             return No(sucessor, no, "➡️➡️")
-        return None
+        else:
+            None
 
     def _agarrar(self, posicao, no):
         # Função para agarrar uma caixa
@@ -207,11 +192,10 @@ class bracoRobotico(Problema):
         # Função heurística para estimar o custo de alcançar o objetivo
         estado = no.estado
 
-        # Filtra os números no estado (removendo '#' e '|')
+        # Filtra os números no estado (removendo '#')
         numeros = [int(num) for num in estado if num.isdigit()]
 
         # Calcula a soma das diferenças entre os números e suas classificações ordenadas reversamente
         soma = sum(abs(a - b) for a, b in zip(numeros, sorted(numeros, reverse=True)))
 
         return soma
-
