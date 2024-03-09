@@ -1,5 +1,6 @@
 from auxiliar.Visitados import Visitados
 from queue import PriorityQueue
+from problemas.problema import Problema
 
 
 def a_estrela(problema):

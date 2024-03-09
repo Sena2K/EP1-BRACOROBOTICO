@@ -2,7 +2,7 @@ from auxiliar.Visitados import Visitados
 from queue import PriorityQueue
 
 
-def dijkstra(problema):
+def ganancioso(problema):
     no = problema.iniciar()
 
     fila = FilaPrioridade()
@@ -17,7 +17,6 @@ def dijkstra(problema):
 
         # faz o teste objetivo. Se chegou no resultado final
         # retorna o No correspondente
-        # print(problema.imprimir(no))
         resultado = problema.testar_objetivo(no)
         if (resultado):
             return (visitados.tamanho(), no)
@@ -29,10 +28,11 @@ def dijkstra(problema):
         for no_sucessor in nos_sucessores:
             # pula estado_filho se já foi expandido
             if not visitados.foi_visitado(no_sucessor):
+                no_sucessor.heuristica = problema.heuristica(no_sucessor)
                 no_sucessor.custo = no.custo + problema.custo(no, no_sucessor)
-                dijkstra = no_sucessor.custo
+                a_estrela_n = no_sucessor.heuristica
 
-                fila.push(dijkstra, no_sucessor)
+                fila.push(a_estrela_n, no_sucessor)
 
     return (visitados.tamanho(), None)
 
