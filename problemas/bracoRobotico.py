@@ -1,9 +1,7 @@
 import numpy as np
-
-from problemas.Custo import Custo
 from problemas.problema import Problema
+from problemas.Custo import Custo
 from no import No
-
 
 class BracoRobotico(Problema):
     def __init__(self):
@@ -22,6 +20,7 @@ class BracoRobotico(Problema):
 
     def iniciar(self):
         self.no_raiz = No(self.estado_inicial)
+        self.procurar_caixa(self.no_raiz.estado)
         return self.no_raiz
 
     def imprimir(self, no):
@@ -36,6 +35,15 @@ class BracoRobotico(Problema):
 
         maquina += estado[-1]
         return maquina
+
+    def procurar_caixa(self, estado_atual):
+        caixas = []
+        for i in range(3, len(estado_atual)):
+            caixa_peso = estado_atual[i]
+            # Skip separators and empty spaces
+            if caixa_peso != "0" and caixa_peso != "#" and caixa_peso != "|":
+                caixas.append((i, int(caixa_peso)))  # Convert the weight to int
+        return caixas
 
     def testar_objetivo(self, no):
         # Obtém o estado atual do nó
@@ -123,36 +131,24 @@ class BracoRobotico(Problema):
     def _empilhar(self, posicao, no):
         # Verifica se há uma caixa na garra do braço robótico
         if no.estado[-1] != "0":
-            # Verifica se há espaço disponível para empilhar a caixa na posição especificada
-            if no.estado[posicao - 3] != "0" and no.estado[posicao - 2] != "0" and no.estado[posicao - 1] == "0":
+            # Encontra a próxima posição disponível para empilhar a caixa na mesma coluna da posição atual
+            nova_posicao = posicao
+            while nova_posicao >= 0 and no.estado[nova_posicao] != "|":
+                nova_posicao -= 1
+
+            # Verifica se há espaço disponível para empilhar a caixa na posição encontrada
+            if nova_posicao >= 0:
                 # Cria uma cópia do estado atual
                 sucessor = np.copy(no.estado)
-                # Move a caixa da garra do braço robótico para a posição especificada
-                sucessor[posicao - 1] = no.estado[-1]
+                # Move a caixa da garra do braço robótico para a posição encontrada
+                while sucessor[nova_posicao] != "0":
+                    nova_posicao -= 1
+                sucessor[nova_posicao] = no.estado[-1]
                 # Libera a garra do braço robótico
                 sucessor[-1] = "0"
                 # Retorna o novo nó representando o estado resultante
                 return No(sucessor, no)
-            # Verifica se há espaço disponível para empilhar a caixa na posição especificada
-            elif no.estado[posicao - 3] != "0" and no.estado[posicao - 2] == "0":
-                # Cria uma cópia do estado atual
-                sucessor = np.copy(no.estado)
-                # Move a caixa da garra do braço robótico para a posição especificada
-                sucessor[posicao - 2] = no.estado[-1]
-                # Libera a garra do braço robótico
-                sucessor[-1] = "0"
-                # Retorna o novo nó representando o estado resultante
-                return No(sucessor, no)
-            # Verifica se há espaço disponível para empilhar a caixa na posição especificada
-            elif no.estado[posicao - 3] == "0":
-                # Cria uma cópia do estado atual
-                sucessor = np.copy(no.estado)
-                # Move a caixa da garra do braço robótico para a posição especificada
-                sucessor[posicao - 3] = no.estado[-1]
-                # Libera a garra do braço robótico
-                sucessor[-1] = "0"
-                # Retorna o novo nó representando o estado resultante
-                return No(sucessor, no)
+
         # Retorna None se não for possível empilhar a caixa
         return None
 
@@ -161,9 +157,7 @@ class BracoRobotico(Problema):
 
     def heuristica(self, no):
         estado = no.estado
-
         numeros = [int(num) for num in estado if num.isdigit()]
-
         soma = sum(abs(a - b) for a, b in zip(numeros, sorted(numeros, reverse=True)))
 
         return soma
