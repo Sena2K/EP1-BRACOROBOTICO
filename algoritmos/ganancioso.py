@@ -2,41 +2,6 @@ from auxiliar.Visitados import Visitados
 from queue import PriorityQueue
 
 
-def ganancioso(problema):
-    no = problema.iniciar()
-
-    fila = FilaPrioridade()
-    fila.push(0, no)
-
-    visitados = Visitados()
-    visitados.adicionar(no)
-
-    while not fila.esta_vazio():
-        no = fila.pop()
-        visitados.adicionar(no)
-
-        # faz o teste objetivo. Se chegou no resultado final
-        # retorna o No correspondente
-        resultado = problema.testar_objetivo(no)
-        if (resultado):
-            return (visitados.tamanho(), no)
-
-        # função sucessores define os Nós sucessores
-        nos_sucessores = problema.gerar_sucessores(no)
-
-        # para cada sucessor, se armazena se ainda não visitado
-        for no_sucessor in nos_sucessores:
-            # pula estado_filho se já foi expandido
-            if not visitados.foi_visitado(no_sucessor):
-                no_sucessor.heuristica = problema.heuristica(no_sucessor)
-                no_sucessor.custo = no.custo + problema.custo(no, no_sucessor)
-                a_estrela_n = no_sucessor.heuristica
-
-                fila.push(a_estrela_n, no_sucessor)
-
-    return (visitados.tamanho(), None)
-
-
 class FilaPrioridade:
     def __init__(self):
         self.fila = PriorityQueue()
@@ -45,7 +10,7 @@ class FilaPrioridade:
         self.fila.put((valor, item))
 
     def pop(self):
-        if (self.esta_vazio()):
+        if self.esta_vazio():
             return None
         else:
             (_, no) = self.fila.get()
@@ -53,3 +18,38 @@ class FilaPrioridade:
 
     def esta_vazio(self):
         return self.fila.empty()
+
+
+def ganancioso(problema):
+    """
+    Implementa o algoritmo de busca gananciosa (best-first search) para resolver um problema.
+
+    Args:
+        problema: O problema a ser resolvido.
+
+    Returns:
+        Uma tupla contendo o tamanho da lista de visitados e o nó final.
+    """
+    no_inicial = problema.iniciar()
+
+    fila_prioridade = FilaPrioridade()
+    fila_prioridade.push(0, no_inicial)
+
+    visitados = Visitados()
+    visitados.adicionar(no_inicial)
+
+    while not fila_prioridade.esta_vazio():
+        no = fila_prioridade.pop()
+        visitados.adicionar(no)
+
+        resultado = problema.testar_objetivo(no)
+        if resultado:
+            return visitados.tamanho(), no
+        sucessores = problema.gerar_sucessores(no)
+        for sucessor in sucessores:
+            if not visitados.foi_visitado(sucessor):
+                sucessor.heuristica = problema.heuristica(sucessor)
+                sucessor.custo = no.custo + problema.custo(no, sucessor)
+                fila_prioridade.push(sucessor.heuristica, sucessor)
+
+    return visitados.tamanho(), None
